@@ -20,7 +20,7 @@ A full-stack banking web application built with Python Flask and SQLite.
 pip3 install flask
 python3 app.py
 ```
-Then open http://127.0.0.1:5000
+Then open http://127.0.0.1:5001
 
 ## Screenshots
 <img width="978" height="771" alt="Screenshot 2026-04-16 at 3 10 20 PM" src="https://github.com/user-attachments/assets/7eee9f0f-660d-4beb-95ac-d47faf155b4a" />
