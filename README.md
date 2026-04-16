@@ -23,7 +23,10 @@ python3 app.py
 Then open http://127.0.0.1:5000
 
 ## Screenshots
-![Dashboard](screenshot.png)
+<img width="978" height="771" alt="Screenshot 2026-04-16 at 3 10 20 PM" src="https://github.com/user-attachments/assets/7eee9f0f-660d-4beb-95ac-d47faf155b4a" />
+<img width="981" height="269" alt="Screenshot 2026-04-16 at 3 10 29 PM" src="https://github.com/user-attachments/assets/072067da-ec4d-4c50-9b66-6156b67b2f5e" />
+
+
 
 ## Future Plans
 - Email notifications
