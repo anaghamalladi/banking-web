@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | PyBank</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app">
+
+    <div class="sidebar">
+      <h2 class="logo">PyBank</h2>
+      <nav>
+        <a href="/dashboard" class="nav-item active">Dashboard</a>
+        <a href="/logout" class="nav-item">Logout</a>
+      </nav>
+      <div class="notif-box" id="notif-box"></div>
+      <div class="sidebar-user">
+        <div class="avatar">{{ user['name'][0].upper() }}</div>
+        <div>
+          <p class="user-name">{{ user['name'] }}</p>
+          <p class="user-acc">Acc: {{ user['account_number'] }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+
+      {% if error %}
+        <div class="error-banner">{{ error }}</div>
+      {% endif %}
+
+      <div class="balance-card">
+        <div>
+          <p class="balance-label">Total Balance</p>
+          <h1 class="balance-amount">Rs {{ "%.2f"|format(user['balance']) }}</h1>
+          <p class="acc-num">Account No: {{ user['account_number'] }}</p>
+        </div>
+        <div class="balance-icon">₹</div>
+      </div>
+
+      <div class="action-grid">
+        <div class="action-card">
+          <h3>Deposit</h3>
+          <form method="POST" action="/deposit">
+            <input type="number" name="amount" placeholder="Enter amount" min="1" required>
+            <button type="submit" class="btn btn-green">Deposit</button>
+          </form>
+        </div>
+        <div class="action-card">
+          <h3>Withdraw</h3>
+          <form method="POST" action="/withdraw">
+            <input type="number" name="amount" placeholder="Enter amount" min="1" required>
+            <button type="submit" class="btn btn-red">Withdraw</button>
+          </form>
+        </div>
+        <div class="action-card">
+          <h3>Transfer</h3>
+          <form method="POST" action="/transfer">
+            <input type="text" name="to_account" placeholder="Account number" required>
+            <input type="number" name="amount" placeholder="Amount" min="1" required>
+            <button type="submit" class="btn btn-blue">Transfer</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Spending Breakdown</h3>
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Last 7 Days Activity</h3>
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <div class="transactions-section">
+        <div class="tx-header">
+          <h3>Transactions</h3>
+          <div class="filters">
+            <select id="filter-type" onchange="filterTransactions()">
+              <option value="all">All Types</option>
+              <option value="deposit">Deposits</option>
+              <option value="withdrawal">Withdrawals</option>
+              <option value="transfer">Transfers</option>
+            </select>
+          </div>
+        </div>
+
+        {% if transactions %}
+          <table id="tx-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in transactions %}
+              <tr class="tx-row" data-type="{{ t['type']|lower }}">
+                <td>
+                  <span class="tx-type {{ 'credit' if 'Deposit' in t['type'] or 'from' in t['type'] else 'debit' }}">
+                    {{ t['type'] }}
+                  </span>
+                </td>
+                <td>Rs {{ "%.2f"|format(t['amount']) }}</td>
+                <td class="date">{{ t['date'] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="empty">No transactions yet.</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    fetch('/chart-data')
+      .then(r => r.json())
+      .then(data => {
+        new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Deposits', 'Withdrawals', 'Transfers'],
+            datasets: [{
+              data: [data.totals.Deposit, data.totals.Withdrawal, data.totals.Transfer],
+              backgroundColor: ['#16a34a', '#dc2626', '#1a56db'],
+              borderWidth: 0
+            }]
+          },
+          options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+        });
+
+        new Chart(document.getElementById('barChart'), {
+          type: 'bar',
+          data: {
+            labels: data.daily_labels,
+            datasets: [{
+              label: 'Amount (Rs)',
+              data: data.daily_data,
+              backgroundColor: '#1a56db',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      });
+
+    fetch('/notifications')
+      .then(r => r.json())
+      .then(data => {
+        const box = document.getElementById('notif-box');
+        if (data.notifications.length > 0) {
+          box.innerHTML = data.notifications.map(n => `
+            <div class="notif ${n.type}">${n.message}</div>
+          `).join('');
+        }
+      });
+
+    function filterTransactions() {
+      const filter = document.getElementById('filter-type').value;
+      document.querySelectorAll('.tx-row').forEach(row => {
+        const type = row.dataset.type;
+        if (filter === 'all' || type.includes(filter)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
